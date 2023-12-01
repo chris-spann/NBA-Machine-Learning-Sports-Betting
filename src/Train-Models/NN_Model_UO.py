@@ -5,23 +5,33 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 from keras.callbacks import TensorBoard, EarlyStopping, ModelCheckpoint
+from keras.optimizers import legacy
 
 current_time = str(time.time())
 
-tensorboard = TensorBoard(log_dir='../../Logs/{}'.format(current_time))
-earlyStopping = EarlyStopping(monitor='val_loss', patience=10, verbose=0, mode='min')
-mcp_save = ModelCheckpoint('../../Models/Trained-Model-OU-' + current_time, save_best_only=True, monitor='val_loss', mode='min')
+tensorboard = TensorBoard(log_dir="../../Logs/{}".format(current_time))
+earlyStopping = EarlyStopping(monitor="val_loss", patience=10, verbose=0, mode="min")
+mcp_save = ModelCheckpoint(
+    "../../Models/Trained-Model-OU-" + current_time,
+    save_best_only=True,
+    monitor="val_loss",
+    mode="min",
+)
 
 dataset = "dataset_2012-24"
 con = sqlite3.connect("../../Data/dataset.sqlite")
-data = pd.read_sql_query(f"select * from \"{dataset}\"", con, index_col="index")
+data = pd.read_sql_query(f'select * from "{dataset}"', con, index_col="index")
 con.close()
 
-OU = data['OU-Cover']
-total = data['OU']
-data.drop(['Score', 'Home-Team-Win', 'TEAM_NAME', 'Date', 'TEAM_NAME.1', 'Date.1', 'OU-Cover', 'OU'], axis=1, inplace=True)
+OU = data["OU-Cover"]
+total = data["OU"]
+data.drop(
+    ["Score", "Home-Team-Win", "TEAM_NAME", "Date", "TEAM_NAME.1", "Date.1", "OU-Cover", "OU"],
+    axis=1,
+    inplace=True,
+)
 
-data['OU'] = np.asarray(total)
+data["OU"] = np.asarray(total)
 data = data.values
 data = data.astype(float)
 
@@ -35,7 +45,14 @@ model.add(tf.keras.layers.Flatten())
 model.add(tf.keras.layers.Dense(128, activation=tf.nn.relu6))
 model.add(tf.keras.layers.Dense(3, activation=tf.nn.softmax))
 
-model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
-model.fit(x_train, y_train, epochs=50, validation_split=0.1, batch_size=32, callbacks=[tensorboard, earlyStopping, mcp_save])
+model.compile(optimizer=legacy.Adam(), loss="sparse_categorical_crossentropy", metrics=["accuracy"])
+model.fit(
+    x_train,
+    y_train,
+    epochs=50,
+    validation_split=0.1,
+    batch_size=32,
+    callbacks=[tensorboard, earlyStopping, mcp_save],
+)
 
-print('Done')
+print("Done")
